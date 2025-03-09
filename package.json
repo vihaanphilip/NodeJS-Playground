@@ -4,7 +4,7 @@
   "description": "Playground for me to play around with NodeJS",
   "main": "1-intro.js",
   "scripts": {
-    "start": "node app.js",
+    "start": "nodemon app.js",
     "dev": "nodemon app.js"
   },
   "repository": {
