@@ -1,24 +1,59 @@
 const express = require('express');
 const app = express();
-const logger = require('./logger');
-const authorize = require('./authorize');
-app.use([logger, authorize]); // middleware functions
+let { people } = require('./data');
 
-// req => middleware => res
-app.get('/', (req, res) => {
-    res.send('<h1>Home Page</h1>');
+// Middleware to parse JSON bodies
+app.use(express.static('./methods-public'));
+// parse form data
+app.use(express.urlencoded({ extended: false }))
+app.use(express.json());
+
+app.get('/api/people', (req, res) => {
+    res.status(200).json({success: true, data: people})
 })
 
-app.get('/about', (req, res) => {
-    res.send('<h1>About</h1>');
+app.post('/api/people', (req, res) => {
+    const { name } = req.body;
+    if (!name) {
+        return res.status(400).json({ success: false, msg: 'Please provide name value' });
+    }
+    res.status(201).json({ success: true, data: [...people, name] });  
+}) 
+
+app.post('/login', (req, res) => {
+    const { name } = req.body;
+    if (name) {
+        return res.status(200).send(`Welcome ${name}`);
+    }
+    res.status(401).send('Please provide credentials');
 })
 
-app.get('/api/products', (req, res) => {
-    res.send('<h1>Products</h1>');
+app.put('/api/people/:id', (req, res) => {
+    const { id } = req.params;
+    const { name } = req.body;
+    // console.log(id, name);
+    // res.send(`Update person ${id} with name ${name}`);
+    const person = people.find((person) => person.id === Number(id));
+    if (!person) {
+        return res.status(404).json({ success: false, msg: `No person with id ${id}` });
+    }
+    const newPeople = people.map((person) => {
+        if (person.id === Number(id)) {
+            person.name = name;
+        }
+        return person;
+    });
+    res.status(200).json({ success: true, data: newPeople });
 })
 
-app.get('/api/items', (req, res) => {
-    res.send('<h1>Items</h1>');
+app.delete('/api/people/:id', (req, res) => {
+    const { id } = req.params;
+    const person = people.find((person) => person.id === Number(id));   
+    if (!person) {
+        return res.status(404).json({ success: false, msg: `No person with id ${id}` });
+    }
+    const newPeople = people.filter((person) => person.id !== Number(id));
+    return res.status(200).json({ success: true, data: newPeople });
 })
 
 app.listen(4000, () => {
